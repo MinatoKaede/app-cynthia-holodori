@@ -1,6 +1,6 @@
 node_modules/
 # 사용자 갤산기 백업 — 절대 커밋하지 않음
-fixtures/
+/fixtures/
 out/
 site/
 .data/
