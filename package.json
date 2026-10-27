@@ -1,16 +1,33 @@
 {
   "name": "app-cynthia-holodori",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "apk": "node scripts/apk.mjs",
     "data": "node scripts/fetch-data.mjs",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && svelte-check --tsconfig ./tsconfig.json --threshold warning",
     "test:golden": "vitest run -c vitest.golden.config.ts"
   },
+  "dependencies": {
+    "@capacitor-community/keep-awake": "^8.0.1",
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/core": "^8.5.3",
+    "@fontsource/ibm-plex-sans-kr": "^5.3.0"
+  },
   "devDependencies": {
+    "@capacitor/cli": "^8.5.3",
+    "@sveltejs/vite-plugin-svelte": "^7.3.1",
     "@types/node": "^22.10.2",
+    "svelte": "^5.57.3",
+    "svelte-check": "^4.7.7",
     "typescript": "^5.6.3",
-    "vitest": "^2.1.8"
+    "vite": "^8.3.5",
+    "vite-node": "^6.0.0",
+    "vitest": "^5.0.5"
   }
 }

@@ -2,7 +2,7 @@
 import type { Card, GameEvent, Rarity } from './types';
 
 const startOf = (x: { startsAt: string; calculatorStartsAt?: string }) => Date.parse(x.calculatorStartsAt ?? x.startsAt);
-const isActive = (x: { startsAt: string; calculatorStartsAt?: string; endsAt: string }, now: number) =>
+export const isActive = (x: { startsAt: string; calculatorStartsAt?: string; endsAt: string }, now: number) =>
   startOf(x) <= now && now <= Date.parse(x.endsAt);
 
 /**

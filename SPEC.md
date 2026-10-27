@@ -195,14 +195,16 @@ holodori.best가 운영하는 공개 저장소. 로그인·봇 확인 없이 받
 ## 5. 기술 스택
 - Vite + TypeScript + (Svelte 또는 React — 가벼운 쪽 권장) + **Capacitor**(안드로이드).
 - 계산: 추출한 워커 문자열을 Blob URL로 `new Worker()` — 갤산기와 같은 방식. 메인 스레드에서 계산 금지.
-- 저장: Capacitor Preferences/Filesystem (백업, 설정, 데이터 캐시, 이미지 캐시).
-- 파일 선택: 안드로이드 문서 선택기(Capacitor 플러그인).
+- 저장: WebView IndexedDB 하나로 통일 (백업, 설정, 데이터 캐시, 결과 캐시). 플러그인 없이 브라우저 개발 환경과 앱에서 똑같이 동작하고, 수 MB 문자열을 네이티브 브리지로 넘기지 않아도 된다. 안드로이드 앱 저장소 안이라 OS가 임의로 지우지 않는다. 이미지 캐시(Phase 3)는 그때 다시 정한다.
+- 파일 선택: `<input type="file">` (Capacitor WebView가 안드로이드 문서 선택기를 띄운다 — 플러그인 불필요).
+- 화면: Svelte 5. 버전은 Capacitor 8 (JDK 21, compileSdk 36, minSdk 24).
 - 알림(Phase 4): Capacitor Local Notifications.
 - 배포: 서명된 APK를 커뮤니티에 직접 배포 (Play 스토어는 추후).
 
 ## 6. 성능 주의
 - 클라우드 서버 Node에서 `analysis.js`의 `search`(기본 빔)로 한 곡을 계산하는 데 약 165초 걸렸다. 휴대폰은 더 느릴 수 있다.
 - 2026-10-27 PC(16코어) Node, exact 워커 1개: 이벤트 PT 조합 탐색(보유 제한 없음, m0367 EXPERT) 617초. 후보 선별은 약 2초, 대부분이 exact 정밀 평가. 워커 수를 늘리면 거의 비례해 줄어든다.
+- 2026-10-27 같은 PC, exact 워커 8개: 사용자 백업 이벤트 PT(보유 카드만) 602초 → 109초, 스코어 71초 → 33초(브라우저 29초). 최종 순위·점수·달성 확률은 워커 1개와 완전히 같다 (`test/concurrency.slow.test.ts`) — 워커 수는 속도만 바꾼다. 앱 기본값은 `코어 수 − 1`(최대 8).
 - 대책: 진행률 표시·취소 버튼 필수, 빔 폭·`probabilitySamples` 기본값을 낮추고 상세 화면에서만 확률 계산, 결과 캐시(같은 입력이면 재사용).
 - Phase 2에서 실제 기기(중급 안드로이드)로 측정하고 기본값을 정한다.
 
@@ -231,7 +233,8 @@ holodori.best가 운영하는 공개 저장소. 로그인·봇 확인 없이 받
 ## 8. 미확정 사항
 - 앱 이름.
 - ~~exact.js 단계 메시지 형식~~ → 2.2에 확정.
-- 곡 공개 시각 보정표: 갤산기 본체에 채보 목록과 별도로 곡별 공개 시각 표(`releaseTime` 없는 곡용, 1시간 어긋난 값 보정용)가 있다. 곡 선택 목록(Phase 2)에 필요하면 `extract.mjs`에 추가.
+- ~~곡 공개 시각 보정표~~ → 2026-10-27 기준 채보 880개 모두 `releaseTime`이 있어 곡 선택 목록(최신순 정렬·미공개 곡 숨김)에는 필요 없다. 1시간 차이는 공개 직후 한 시간만 영향. `releaseTime` 없는 곡이 생기면 다시 검토.
+- 곡 점수 보너스: 워커 결과의 `directSongScoreBonusPercent`는 갤산기 설정 `songScoreBonusOverride`(기본 10%)로 모든 덱에 같고, 과제곡 보너스는 `finalScoreBonusPercent`에 들어간다. 앱은 후자만 "과제곡 보너스"로 표시.
 - 실제 게임 이벤트 PT 공식과 갤산기 지표의 관계.
 - 스케줄러 세부 기능.
 - holodori.best 측에 이미지 직접 불러오기 사용 고지.

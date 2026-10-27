@@ -40,6 +40,9 @@ export interface ChartMeta {
   difficulty: string;
   scoreRatio: number | null;
   scoreCalibrationSource: string;
+  difficultyLevel?: number;
+  totalNotes?: number;
+  durationSeconds?: number;
   releaseTime?: number;
   [k: string]: unknown;
 }

@@ -1,1 +1,5 @@
 * text=auto eol=lf
+# 윈도우 배치 파일은 CRLF여야 레이블·goto가 안전하게 동작한다
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.jar binary

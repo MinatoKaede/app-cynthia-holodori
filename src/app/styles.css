@@ -1,0 +1,126 @@
+/* 디자인 토큰 (SPEC 4. 라이트) */
+:root {
+  --bg: #f6f4f8;
+  --surface: #ffffff;
+  --surface-2: #f0edf3;
+  --placeholder: #ece8f0;
+  --border: #e3dfe8;
+  --border-strong: #b9b3c2;
+  --text: #1e1a24;
+  --text-2: #4a4553;
+  --muted: #6b6577;
+  --accent: #c9306d;
+  --accent-text: #a4255a;
+  --accent-soft: #fce4ee;
+  --danger: #b3261e;
+
+  --r-card: 18px;
+  --r-button: 14px;
+  --r-art: 7px;
+  --touch: 44px;
+  --nav-h: 64px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+  color-scheme: light;
+  font-family: 'IBM Plex Sans KR', system-ui, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); }
+body { min-height: 100dvh; font-size: 15px; line-height: 1.5; overscroll-behavior-y: none; }
+button, input, select { font: inherit; color: inherit; }
+h1, h2, h3, p { margin: 0; }
+h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
+h2 { font-size: 17px; font-weight: 700; }
+h3 { font-size: 15px; font-weight: 600; }
+
+.num { font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+.small { font-size: 13px; }
+.accent { color: var(--accent-text); }
+
+.page {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: calc(16px + var(--safe-top)) 16px calc(var(--nav-h) + var(--safe-bottom) + 24px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-card);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.btn {
+  min-height: var(--touch);
+  padding: 0 16px;
+  border-radius: var(--r-button);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.btn:disabled { opacity: 0.45; cursor: default; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn.soft { background: var(--accent-soft); border-color: var(--accent-soft); color: var(--accent-text); }
+.btn.ghost { background: transparent; border-color: transparent; color: var(--accent-text); padding: 0 8px; }
+.btn.block { width: 100%; }
+.row { display: flex; gap: 8px; align-items: center; }
+.row > .grow { flex: 1; min-width: 0; }
+.split { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 500;
+}
+.chip.on { background: var(--accent-soft); color: var(--accent-text); }
+
+.label { font-size: 13px; color: var(--muted); font-weight: 500; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.input, select.input {
+  min-height: var(--touch);
+  width: 100%;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+.input:focus-visible, .btn:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.segment { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; background: var(--surface-2); border-radius: 12px; padding: 4px; gap: 4px; }
+.segment button { min-height: 40px; border: 0; border-radius: 9px; background: transparent; font-weight: 600; color: var(--text-2); cursor: pointer; }
+.segment button.on { background: var(--surface); color: var(--accent-text); box-shadow: 0 1px 2px rgb(30 26 36 / 0.12); }
+
+.check { display: flex; align-items: center; gap: 10px; min-height: var(--touch); cursor: pointer; }
+.check input { width: 20px; height: 20px; accent-color: var(--accent); }
+
+.notice { background: var(--surface-2); border-radius: 12px; padding: 10px 12px; font-size: 13px; color: var(--text-2); }
+.notice.warn { background: #fff4e5; color: #7a4a00; }
+.notice.error { background: #fdecea; color: var(--danger); }
+
+.divider { height: 1px; background: var(--border); }
+.kv { display: flex; justify-content: space-between; gap: 12px; }
+.kv > :last-child { text-align: right; }
