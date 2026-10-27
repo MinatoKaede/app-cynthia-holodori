@@ -30,8 +30,9 @@
   const eta = $derived(search.status === 'running' ? remainingMs(now) : null);
   const modeLabel = $derived(run?.mode === 'event-pt' ? '이벤트 PT' : run?.mode === 'event-score' ? '과제곡 점수' : '최고 점수');
 
-  function open(i: number) {
+  function open(i: number, rank: number) {
     nav.detailIndex = i;
+    nav.detailRank = rank;
     nav.view = 'detail';
   }
 </script>
@@ -83,7 +84,7 @@
     </div>
 
     {#each sorted as { r, i }, rank (i)}
-      <button class="card deck" onclick={() => open(i)}>
+      <button class="card deck" onclick={() => open(i, rank + 1)}>
         <div class="row">
           <span class="rank num">{rank + 1}</span>
           <div class="grow stats num">

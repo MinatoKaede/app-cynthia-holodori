@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { SearchMode } from '../../engine/context';
   import { challengeSongIds, eventCandidateCards } from '../../engine/events';
+  import MemberIcon from '../components/MemberIcon.svelte';
   import { DIFFICULTIES, DIFFICULTY_LABEL } from '../lib/format';
   import { concurrency, search, startSearch } from '../search.svelte';
   import { activeEvent, app, cardById, cardLabel, chartMeta, cond, getData, members, nav, setLeader, songs } from '../state.svelte';
@@ -104,9 +105,14 @@
     <div class="split">
       <label class="field">
         <span class="label">리더 멤버</span>
-        <select class="input" value={cond.leaderCharacterId} onchange={(e) => setLeader(e.currentTarget.value)}>
-          {#each memberList as m (m.id)}<option value={m.id}>{m.name}</option>{/each}
-        </select>
+        <div class="row">
+          {#key cond.leaderCharacterId}
+            <MemberIcon id={cond.leaderCharacterId} name={memberList.find((m) => m.id === cond.leaderCharacterId)?.name ?? ''} size={32} />
+          {/key}
+          <select class="input grow" value={cond.leaderCharacterId} onchange={(e) => setLeader(e.currentTarget.value)}>
+            {#each memberList as m (m.id)}<option value={m.id}>{m.name}</option>{/each}
+          </select>
+        </div>
       </label>
       <label class="field">
         <span class="label">리더 의상</span>

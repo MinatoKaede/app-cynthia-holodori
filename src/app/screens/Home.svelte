@@ -1,6 +1,9 @@
 <script lang="ts">
   import { challengeSongIds } from '../../engine/events';
+  import CachedImage from '../components/CachedImage.svelte';
   import CardFrame from '../components/CardFrame.svelte';
+  import MemberIcon from '../components/MemberIcon.svelte';
+  import { imageUrl } from '../lib/images';
   import { backupSummary } from '../lib/backup';
   import { date, dateTime, eventKind, remaining } from '../lib/format';
   import { activeEvent, app, baseEvent, cardById, getData, members, nav, nextEvent, openRecommend, songs } from '../state.svelte';
@@ -26,9 +29,12 @@
 
   {#if event && base}
     <section class="card">
+      <!-- 배너 오른쪽 위 저작권 표기·왼쪽 아래 로고는 가리지 않는다. 남은 시간은 왼쪽 위 -->
       <div class="banner">
+        <CachedImage url={imageUrl.banner(base.id)} alt={base.name} fit="contain">
+          {#snippet fallback()}<span class="banner-name">{base.name}</span>{/snippet}
+        </CachedImage>
         <span class="badge num">{remaining(base.endsAt, app.now)}</span>
-        <span class="banner-name">{base.name}</span>
       </div>
       <div class="row wrap">
         {#if eventKind(base.id)}<span class="chip">{eventKind(base.id)}</span>{/if}
@@ -41,7 +47,11 @@
       <ul class="bonus small">
         <li>
           {chapter ? '챕터 멤버' : '보너스 멤버'} <b class="accent">+{event.formationBonusPercent}%</b>
-          <span class="muted">· {event.bonusCharacterIds.map(memberName).join(', ')}</span>
+          <span class="members">
+            {#each event.bonusCharacterIds as id (id)}
+              <span class="member"><MemberIcon {id} name={memberName(id)} size={22} /> {memberName(id)}</span>
+            {/each}
+          </span>
         </li>
         <li>대상 카드 장당 <b class="accent">+{event.featuredCardBonusPercent}%</b></li>
         {#if challengeTitles.length > 0}
@@ -54,7 +64,7 @@
         <h3>이벤트 대상 카드</h3>
         <div class="grid">
           {#each event.featuredCardIds as id (id)}
-            <CardFrame card={cardById(id)} featured />
+            <CardFrame card={cardById(id)} featured caption />
           {/each}
         </div>
       {/if}
@@ -68,6 +78,11 @@
     <section class="card">
       <h2>진행 중인 이벤트 없음</h2>
       {#if next}
+        <div class="banner">
+          <CachedImage url={imageUrl.banner(next.id)} alt={next.name} fit="contain">
+            {#snippet fallback()}<span class="banner-name">{next.name}</span>{/snippet}
+          </CachedImage>
+        </div>
         <p class="small">다음 이벤트: <b>{next.name}</b></p>
         <p class="small muted num">{dateTime(next.calculatorStartsAt ?? next.startsAt)} 시작</p>
       {/if}
@@ -99,9 +114,9 @@
     border-radius: 12px;
     background: linear-gradient(135deg, var(--accent-soft), var(--surface-2));
     display: flex; align-items: center; justify-content: center;
-    padding: 24px; text-align: center;
+    overflow: hidden; text-align: center;
   }
-  .banner-name { font-size: 18px; font-weight: 700; color: var(--accent-text); word-break: keep-all; }
+  .banner-name { padding: 24px; font-size: 18px; font-weight: 700; color: var(--accent-text); word-break: keep-all; }
   .badge {
     position: absolute; top: 10px; left: 10px;
     font-size: 12px; font-weight: 600;
@@ -111,4 +126,6 @@
   .wrap { flex-wrap: wrap; }
   .bonus { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 2px; }
   .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .members { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 4px; }
+  .member { display: inline-flex; align-items: center; gap: 4px; color: var(--text-2); }
 </style>

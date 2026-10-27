@@ -59,6 +59,8 @@ export const nav = $state({
   tab: 'home' as Tab,
   view: 'conditions' as RecommendView,
   detailIndex: 0,
+  /** 결과 화면에 보이던 순위 (정렬에 따라 detailIndex + 1과 다를 수 있다) */
+  detailRank: 1,
 });
 
 export const cond = $state<Conditions>({

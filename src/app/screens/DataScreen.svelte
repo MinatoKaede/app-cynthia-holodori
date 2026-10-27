@@ -2,8 +2,20 @@
   import { MAX_POWER_UP_PERCENT, backupSummary, parseBackup, type StoredBackup } from '../lib/backup';
   import { dateTime } from '../lib/format';
   import { idbDelete, idbKeys } from '../lib/idb';
+  import { clearImageCache, imageCacheStats } from '../lib/images';
   import { autoConcurrency } from '../lib/workers';
   import { app, getData, refreshData, saveBackup, saveOverrides, savePrefs } from '../state.svelte';
+
+  let images = $state<{ count: number; bytes: number } | null>(null);
+  const refreshImageStats = () => imageCacheStats().then((s) => (images = s)).catch(() => {});
+  $effect(() => {
+    void refreshImageStats();
+  });
+
+  async function clearImages() {
+    await clearImageCache();
+    await refreshImageStats();
+  }
 
   let pending: StoredBackup | null = $state(null);
   let fileError = $state('');
@@ -143,7 +155,19 @@
     <button class="btn block" onclick={clearResults}>저장된 결과 지우기</button>
   </section>
 
-  <p class="small muted">계산 엔진과 데이터: 갤산기(doricalc.cc) — 제작자의 허락을 받아 그대로 사용합니다.</p>
+  <section class="card">
+    <h2>이미지</h2>
+    <p class="small muted num">
+      카드 일러·배너·멤버 아이콘은 처음 볼 때 받아 이 기기에 저장합니다{images ? ` (현재 ${images.count}개, ${(images.bytes / 1024 / 1024).toFixed(1)}MB)` : ''}.
+      100MB를 넘으면 오래 안 본 것부터 지웁니다.
+    </p>
+    <button class="btn block" onclick={clearImages}>이미지 캐시 지우기</button>
+  </section>
+
+  <p class="small muted">
+    계산 엔진과 데이터: 갤산기(doricalc.cc) — 제작자의 허락을 받아 그대로 사용합니다.
+    이미지: holodori.best 공개 저장소(cdn.holodori.dev). © COVER / © QualiArts
+  </p>
 </main>
 
 <style>

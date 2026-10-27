@@ -2,7 +2,9 @@
   import { challengeSongBonusPercent, eventBonus } from '../../engine/events';
   import { eventPt } from '../../engine/ranking';
   import type { Card } from '../../engine/types';
+  import CachedImage from '../components/CachedImage.svelte';
   import CardFrame from '../components/CardFrame.svelte';
+  import { imageUrl } from '../lib/images';
   import { num, pct } from '../lib/format';
   import { buildSettings, formation, search } from '../search.svelte';
   import { cardById, cardLabel, chartMeta, cond, growth, nav } from '../state.svelte';
@@ -55,10 +57,17 @@
 <main class="page">
   <div class="row">
     <button class="btn ghost back" onclick={() => (nav.view = 'results')}>‹ 결과</button>
-    <h1 class="grow">{nav.detailIndex + 1}위 덱</h1>
+    <h1 class="grow">{nav.detailRank}위 덱</h1>
   </div>
 
   {#if r}
+    {#if cards[0]}
+      <div class="hero">
+        <CachedImage url={imageUrl.cardFull(cards[0].id)} alt={cardLabel(cards[0])}>
+          {#snippet fallback()}<span class="hero-name">{cardLabel(cards[0])}</span>{/snippet}
+        </CachedImage>
+      </div>
+    {/if}
     <section class="card num">
       {#if r.eventBonusPercent !== undefined && run?.mode === 'event-pt'}
         <div class="kv"><span class="muted">예상 PT <span class="small">(갤산기 기준)</span></span><b class="big">{num(eventPt(r.result.expectedScore, r.eventBonusPercent))}</b></div>
@@ -127,6 +136,12 @@
 
 <style>
   .back { margin-left: -8px; }
+  /* 가로 일러 1820×1024 */
+  .hero {
+    aspect-ratio: 1820 / 1024; border-radius: var(--r-card); overflow: hidden;
+    background: var(--placeholder); display: flex; align-items: center; justify-content: center;
+  }
+  .hero-name { font-weight: 700; color: var(--text-2); }
   .big { font-size: 22px; }
   .card-row { align-items: flex-start; gap: 12px; }
   .thumb { width: 56px; flex: none; }
