@@ -1,0 +1,16 @@
+{
+  "name": "app-cynthia-holodori",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "data": "node scripts/fetch-data.mjs",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "test:golden": "vitest run -c vitest.golden.config.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8"
+  }
+}

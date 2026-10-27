@@ -98,8 +98,17 @@ worker.postMessage({
     eventMode, eventPtMode, currentEvent } }
 // → preparation-progress …, preparation-result { finalists, screenedCount } → 이후 exact.js 단계
 ```
-**미확인 — Phase 1에서 확정할 것:** finalists를 exact.js로 넘기는 메시지 순서와 형식(갤산기 본체가 수행하는 연결 부분).
-방법: 브라우저에서 doricalc.cc를 열고 `Worker.prototype.postMessage`와 `onmessage`를 가로채는 스니펫을 넣은 뒤 "조합 탐색"을 이벤트 PT 모드로 실행해 실제 메시지를 기록한다. 기록을 그대로 테스트 픽스처(골든)로 저장해 앱의 연결 코드가 같은 메시지를 만들고 같은 결과를 받는지 검증한다.
+**확정 (2026-10-27, 번들 `c30f45fe5d0c0266` 분석) — 갤산기 본체의 연결 순서.** 구현: `src/engine/search.ts`
+1. prepare 워커 ← `{type:'prepare-search', requestId, context}` → `preparation-result{pass:'primary', finalists, screenedCount}`
+2. exact 워커 풀(기본 1개, "최대 컴퓨팅 자원 활용" 시 min(32, 후보 수, 코어 수)) — 후보를 번갈아 나눠
+   ← `{type:'optimize-combinations', candidates, chart, returnAllRankings:false, resultLimit, withInputIndices:true, operationId}` → `combination-result{rankings, indices}`.
+   합친 뒤 `rankingMultiplier` 기준 정렬, 상위 resultLimit개.
+3. 같은 prepare 워커 ← `{type:'prepare-refinement', requestId, rankings:[{result:{order}}]}` → `preparation-result{pass:'refinement', finalists}` (스페셜 순서 기반 추가 후보)
+4. 추가 후보가 있으면 2와 같이 정밀 평가
+5. 1·2차 결과를 합쳐 같은 카드 구성은 하나만 남기고 정렬 (이벤트 PT 모드: 예상 PT, 점수 모드: 이론상 최대 점수), 상위 resultLimit개
+6. 별도 exact 워커 ← `{type:'estimate-achievement', rankings, chart, sampleCount:25000}` → `achievement-result{rankings}` (확률은 시드 고정이라 결정적)
+- 모드: 이벤트 PT = `eventMode && !eventScoreMode`, 이벤트 점수 = 둘 다 true (과제곡만 선택 가능, 보너스%는 계산하지만 `rankingMultiplier` 없이 최대 점수 목표).
+- 갤산기 페이지: `https://doricalc.cc/#/event` (PT / 스코어 탭). 기록 스니펫: `tools/capture-snippet.js`.
 
 ### 2.3 엔진 사용 방침
 | 앱 기능 | 사용 엔진 |
@@ -193,6 +202,7 @@ holodori.best가 운영하는 공개 저장소. 로그인·봇 확인 없이 받
 
 ## 6. 성능 주의
 - 클라우드 서버 Node에서 `analysis.js`의 `search`(기본 빔)로 한 곡을 계산하는 데 약 165초 걸렸다. 휴대폰은 더 느릴 수 있다.
+- 2026-10-27 PC(16코어) Node, exact 워커 1개: 이벤트 PT 조합 탐색(보유 제한 없음, m0367 EXPERT) 617초. 후보 선별은 약 2초, 대부분이 exact 정밀 평가. 워커 수를 늘리면 거의 비례해 줄어든다.
 - 대책: 진행률 표시·취소 버튼 필수, 빔 폭·`probabilitySamples` 기본값을 낮추고 상세 화면에서만 확률 계산, 결과 캐시(같은 입력이면 재사용).
 - Phase 2에서 실제 기기(중급 안드로이드)로 측정하고 기본값을 정한다.
 
@@ -220,7 +230,8 @@ holodori.best가 운영하는 공개 저장소. 로그인·봇 확인 없이 받
 
 ## 8. 미확정 사항
 - 앱 이름.
-- exact.js 단계 메시지 형식 (Phase 1에서 기록으로 확정).
+- ~~exact.js 단계 메시지 형식~~ → 2.2에 확정.
+- 곡 공개 시각 보정표: 갤산기 본체에 채보 목록과 별도로 곡별 공개 시각 표(`releaseTime` 없는 곡용, 1시간 어긋난 값 보정용)가 있다. 곡 선택 목록(Phase 2)에 필요하면 `extract.mjs`에 추가.
 - 실제 게임 이벤트 PT 공식과 갤산기 지표의 관계.
 - 스케줄러 세부 기능.
 - holodori.best 측에 이미지 직접 불러오기 사용 고지.
