@@ -1,0 +1,12 @@
+{
+  "name": "doricalc-extract-tools",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "extract": "node --max-old-space-size=4096 extract.mjs"
+  },
+  "dependencies": {
+    "acorn": "^8.14.0",
+    "acorn-walk": "^8.3.4"
+  }
+}
