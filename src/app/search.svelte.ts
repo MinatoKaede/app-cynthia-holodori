@@ -19,6 +19,8 @@ export interface SearchRun {
   /** 탐색 당시 이벤트 (챕터 반영) */
   event: GameEvent | null;
   songTitle: string;
+  /** 미리 찾기의 기준 시각 (없으면 실행한 시각) */
+  at?: number;
 }
 
 export const search = $state({
@@ -100,12 +102,13 @@ async function pruneCache() {
   await idbDelete('results', entries.slice(0, keys.length - CACHE_SIZE).map(([k]) => k));
 }
 
-export async function startSearch(conditions: Conditions, opts: { useCache?: boolean } = {}): Promise<void> {
+export async function startSearch(conditions: Conditions, opts: { useCache?: boolean; at?: number } = {}): Promise<void> {
   if (search.status === 'running') return;
   const d = getData();
   const meta = chartMeta(conditions.songId, conditions.difficulty);
   if (!meta) throw new Error('곡을 골라 주세요.');
-  const now = Date.now();
+  // 기준 시각: 보통 지금. 다음 챕터 미리 찾기는 그 챕터 시작 시각 (그 시각의 이벤트·챕터 보너스로 계산)
+  const now = opts.at ?? Date.now();
   // 워커로 보낼 값은 반응형 프록시가 아닌 일반 객체여야 복제된다
   const g = $state.snapshot(growth());
   const settings = $state.snapshot(buildSettings(conditions, g));
@@ -114,7 +117,7 @@ export async function startSearch(conditions: Conditions, opts: { useCache?: boo
 
   Object.assign(search, {
     status: 'running',
-    run: { conditions: $state.snapshot(conditions), mode: conditions.mode, event: context.currentEvent, songTitle: meta.title },
+    run: { conditions: $state.snapshot(conditions), mode: conditions.mode, event: context.currentEvent, songTitle: meta.title, at: opts.at },
     phase: 'screening',
     completed: 0,
     total: 1,

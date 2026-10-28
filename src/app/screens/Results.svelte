@@ -49,6 +49,9 @@
       <div class="muted">
         {run.event?.name ?? '이벤트 없음'}{run.conditions.ownedCardsOnly ? ' · 보유 카드만' : ''}{run.conditions.excludeComboConditionCards ? ' · 콤보 조건 제외' : ''}{run.conditions.fixedCardIds.length ? ` · 고정 ${run.conditions.fixedCardIds.length}장` : ''}
       </div>
+      {#if run.at && run.at > Date.now()}
+        <div class="accent">미리 찾기 — {dateTime(run.at)} 챕터 시작 기준</div>
+      {/if}
     </section>
   {/if}
 
@@ -66,15 +69,15 @@
     </section>
   {:else if search.status === 'cancelled'}
     <p class="notice">탐색을 취소했습니다.</p>
-    <button class="btn primary block" onclick={() => run && startSearch(run.conditions)}>다시 찾기</button>
+    <button class="btn primary block" onclick={() => run && startSearch(run.conditions, { at: run.at })}>다시 찾기</button>
   {:else if search.status === 'error'}
     <p class="notice error">{search.error}</p>
-    <button class="btn primary block" onclick={() => run && startSearch(run.conditions)}>다시 찾기</button>
+    <button class="btn primary block" onclick={() => run && startSearch(run.conditions, { at: run.at })}>다시 찾기</button>
   {:else if search.status === 'done'}
     {#if search.cachedAt}
       <div class="notice row">
         <span class="grow">{dateTime(search.cachedAt)}에 계산한 결과입니다.</span>
-        <button class="btn ghost" onclick={() => run && startSearch(run.conditions, { useCache: false })}>다시 계산</button>
+        <button class="btn ghost" onclick={() => run && startSearch(run.conditions, { useCache: false, at: run.at })}>다시 계산</button>
       </div>
     {/if}
 

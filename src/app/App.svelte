@@ -1,15 +1,30 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import BottomNav from './components/BottomNav.svelte';
+  import { onNotificationTap } from './lib/notify';
   import { onBackButton } from './lib/platform';
+  import { loadSchedule } from './schedule.svelte';
+  import { startSearch } from './search.svelte';
   import DataScreen from './screens/DataScreen.svelte';
   import Home from './screens/Home.svelte';
   import Recommend from './screens/Recommend.svelte';
   import Schedule from './screens/Schedule.svelte';
-  import { app, initApp, nav } from './state.svelte';
+  import { app, cond, initApp, nav, showDefaultResults } from './state.svelte';
 
   onMount(() => {
-    void initApp();
+    app.now = Date.now();
+    const ready = initApp().then(async () => {
+      if (app.status === 'ready') await loadSchedule();
+    });
+    // 알림을 누르면: 챕터 전환은 기본 조건으로 덱 찾기(미리 찾아 두었으면 바로 나옴), 나머지는 스케줄 탭
+    onNotificationTap(async (extra) => {
+      await ready;
+      if (app.status !== 'ready') return;
+      if (extra.action === 'chapter') {
+        showDefaultResults('event-pt');
+        await startSearch(cond);
+      } else nav.tab = 'schedule';
+    });
     const timer = setInterval(() => (app.now = Date.now()), 30_000);
     // 뒤로 가기: 상세 → 결과 → 조건 → 홈 → 앱 내리기
     onBackButton(() => {

@@ -173,14 +173,17 @@ export function songs(now = app.now): Song[] {
 export const chartMeta = (songId: string, difficulty: string) =>
   (getData().master.charts as ChartMeta[]).find((c) => c.songId === songId && c.difficulty === difficulty);
 
-/** 추천 조건을 모드에 맞는 기본값으로 (곡은 첫 과제곡, 리더는 갤산기 기본) */
-export function resetConditions(mode: SearchMode) {
+/**
+ * 추천 조건을 모드에 맞는 기본값으로 (곡은 첫 과제곡, 리더는 갤산기 기본).
+ * at을 주면 그 시각의 이벤트·챕터 기준 (다음 챕터 미리 찾기)
+ */
+export function resetConditions(mode: SearchMode, at = app.now) {
   const { cards } = getData().master;
-  const event = activeEvent();
+  const event = activeEvent(at);
   const challenge = challengeSongIds(event);
   const leader = cards.find((c) => c.rarity === 5);
   cond.mode = event ? mode : 'normal';
-  cond.songId = challenge[0] ?? songs()[0]?.songId ?? '';
+  cond.songId = challenge[0] ?? songs(at)[0]?.songId ?? '';
   cond.difficulty = 'expert';
   cond.leaderCharacterId = leader?.characterId ?? '';
   cond.leaderOutfitCardId = leader?.id ?? '';
@@ -198,4 +201,11 @@ export function openRecommend(mode: SearchMode) {
   resetConditions(mode);
   nav.tab = 'recommend';
   nav.view = 'conditions';
+}
+
+/** 기본 조건으로 바꾸고 결과 화면으로 간다. 이어서 startSearch(cond, { at })를 부른다 */
+export function showDefaultResults(mode: SearchMode, at?: number) {
+  resetConditions(mode, at);
+  nav.tab = 'recommend';
+  nav.view = 'results';
 }

@@ -4,6 +4,7 @@
   import { idbDelete, idbKeys } from '../lib/idb';
   import { clearImageCache, imageCacheStats } from '../lib/images';
   import { autoConcurrency } from '../lib/workers';
+  import { refreshSchedule } from '../schedule.svelte';
   import { app, getData, refreshData, saveBackup, saveOverrides, savePrefs } from '../state.svelte';
 
   let images = $state<{ count: number; bytes: number } | null>(null);
@@ -74,6 +75,7 @@
     try {
       const before = getData().manifest.source.bundleHash;
       await refreshData();
+      await refreshSchedule();
       updateMessage = getData().manifest.source.bundleHash === before ? '최신 데이터입니다.' : '새 데이터로 바꿨습니다.';
     } catch (e) {
       updateMessage = (e as Error).message;
