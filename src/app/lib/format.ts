@@ -29,9 +29,12 @@ export function duration(ms: number): string {
 export const DIFFICULTIES = ['easy', 'normal', 'hard', 'expert'] as const;
 export const DIFFICULTY_LABEL: Record<string, string> = { easy: 'EASY', normal: 'NORMAL', hard: 'HARD', expert: 'EXPERT' };
 
-/** 이벤트 ID 앞부분으로 종류를 표시 (갤산기 임시 ID notice-…는 종류를 알 수 없음) */
+/**
+ * 이벤트 ID 앞부분으로 게임 속 정식 명칭을 표시 (갤산기 임시 ID notice-…는 종류를 알 수 없음).
+ * 스코어 챌린지 이벤트(특정 곡 하이스코어 합계)는 갤산기 ID 형식을 아직 모른다 — 나오면 추가
+ */
 export function eventKind(id: string): string | null {
-  if (id.startsWith('marathon_event-relay')) return '릴레이 이벤트';
-  if (id.startsWith('marathon_event-normal')) return '마라톤 이벤트';
+  if (id.startsWith('marathon_event-relay')) return '스포트라이트 이벤트';
+  if (id.startsWith('marathon_event-normal')) return '포인트 랠리 이벤트';
   return null;
 }
