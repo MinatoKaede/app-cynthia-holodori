@@ -15,6 +15,12 @@ export async function keepScreenOn(on: boolean): Promise<void> {
   }
 }
 
+/** 앱이 다시 앞으로 왔을 때 (안드로이드 resume, 브라우저는 탭이 다시 보일 때) */
+export function onResume(handler: () => void): void {
+  if (isNative) void App.addListener('resume', handler);
+  else document.addEventListener('visibilitychange', () => document.visibilityState === 'visible' && handler());
+}
+
 /** 뒤로 가기 버튼. handler가 false를 돌려주면 앱을 내린다 (종료하지 않아 계산이 이어진다) */
 export function onBackButton(handler: () => boolean): void {
   if (!isNative) return;

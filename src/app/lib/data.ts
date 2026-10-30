@@ -42,10 +42,19 @@ async function sha256Hex(text: string): Promise<string> {
   return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
+/** GitHub Pages가 가끔 503을 돌려준다 — 서버 오류·네트워크 오류는 잠시 뒤 두 번 더 시도 */
 async function fetchText(path: string, timeoutMs = 30000): Promise<string> {
-  const res = await fetch(DATA_BASE + path, { cache: 'no-store', signal: AbortSignal.timeout(timeoutMs) });
-  if (!res.ok) throw new Error(`${path}: HTTP ${res.status}`);
-  return res.text();
+  const delays = [1000, 3000];
+  for (let attempt = 0; ; attempt++) {
+    try {
+      const res = await fetch(DATA_BASE + path, { cache: 'no-store', signal: AbortSignal.timeout(timeoutMs) });
+      if (res.ok) return await res.text();
+      if (res.status < 500 || attempt >= delays.length) throw new Error(`${path}: HTTP ${res.status}`);
+    } catch (e) {
+      if (attempt >= delays.length || (e instanceof Error && /HTTP 4\d\d/.test(e.message))) throw e;
+    }
+    await new Promise((r) => setTimeout(r, delays[attempt]));
+  }
 }
 
 /** 저장된 파일이 manifest의 해시와 같으면 그것을, 아니면 받아서 검증한 내용을 돌려준다 (저장은 하지 않음) */

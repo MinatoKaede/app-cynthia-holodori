@@ -2,14 +2,14 @@
   import { onMount } from 'svelte';
   import BottomNav from './components/BottomNav.svelte';
   import { onNotificationTap } from './lib/notify';
-  import { onBackButton } from './lib/platform';
-  import { loadSchedule } from './schedule.svelte';
+  import { onBackButton, onResume } from './lib/platform';
+  import { loadSchedule, refreshSchedule } from './schedule.svelte';
   import { startSearch } from './search.svelte';
   import DataScreen from './screens/DataScreen.svelte';
   import Home from './screens/Home.svelte';
   import Recommend from './screens/Recommend.svelte';
   import Schedule from './screens/Schedule.svelte';
-  import { app, cond, initApp, nav, showDefaultResults } from './state.svelte';
+  import { app, checkForUpdate, cond, initApp, nav, showDefaultResults } from './state.svelte';
 
   onMount(() => {
     app.now = Date.now();
@@ -25,7 +25,17 @@
         await startSearch(cond);
       } else nav.tab = 'schedule';
     });
-    const timer = setInterval(() => (app.now = Date.now()), 30_000);
+    // 새 데이터 확인: 앱이 다시 앞으로 오면(10분 간격 이상), 켜져 있는 동안은 30분마다
+    const refresh = async (minIntervalMs: number) => {
+      app.now = Date.now();
+      await ready;
+      if (await checkForUpdate(minIntervalMs)) await refreshSchedule();
+    };
+    onResume(() => void refresh(10 * 60_000).then(() => refreshSchedule()));
+    const timer = setInterval(() => {
+      app.now = Date.now();
+      void refresh(30 * 60_000);
+    }, 30_000);
     // 뒤로 가기: 상세 → 결과 → 조건 → 홈 → 앱 내리기
     onBackButton(() => {
       if (nav.tab === 'recommend' && nav.view === 'detail') nav.view = 'results';

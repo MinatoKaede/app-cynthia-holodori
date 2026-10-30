@@ -87,6 +87,7 @@ export async function initApp(): Promise<void> {
     app.overrides = overrides ?? {};
     app.prefs = { concurrency: 0, ...prefs };
     const r = await loadAppData((p) => { app.progress = p; });
+    lastUpdateCheck = Date.now();
     setData(r.data);
     app.updateError = r.updateError ?? '';
     resetConditions('event-pt');
@@ -99,9 +100,29 @@ export async function initApp(): Promise<void> {
 
 export async function refreshData(): Promise<void> {
   const r = await loadAppData((p) => { app.progress = p; });
+  lastUpdateCheck = Date.now();
+  const eventBefore = data && activeEvent(Date.now())?.id;
   setData(r.data);
   app.updateError = r.updateError ?? '';
+  // 새 이벤트로 바뀌었으면 추천 조건도 새 이벤트 기본값으로 (과제곡 등)
+  if (activeEvent(Date.now())?.id !== eventBefore) resetConditions('event-pt', Date.now());
   if (r.updateError) throw new Error(r.updateError);
+}
+
+/**
+ * 안드로이드는 앱을 내려도 메모리에 남겨 두므로, 다시 열 때 "처음 실행"이 일어나지 않는다.
+ * 앱이 앞으로 돌아올 때와 켜져 있는 동안 주기적으로 새 데이터를 확인한다. 바뀌었으면 true
+ */
+let lastUpdateCheck = 0;
+export async function checkForUpdate(minIntervalMs: number): Promise<boolean> {
+  if (app.status !== 'ready' || Date.now() - lastUpdateCheck < minIntervalMs) return false;
+  const before = data?.manifest.source.bundleHash;
+  try {
+    await refreshData();
+  } catch {
+    // app.updateError에 남아 홈·데이터 화면에 표시된다
+  }
+  return getData().manifest.source.bundleHash !== before;
 }
 
 export async function saveBackup(b: StoredBackup | null) {
