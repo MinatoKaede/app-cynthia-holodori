@@ -1,5 +1,6 @@
 // 목표 PT 진행 계산 (화면·알림 공통, 순수 함수).
 // 이벤트 PT는 이벤트 시작 시각에 0에서 출발한다고 보고, 시작 시점을 기록의 원점으로 쓴다.
+import { basePt, flameRecoveryMinutes, playPt } from './boost';
 
 export interface PtEntry {
   /** 기록한 시각 (ms) */
@@ -11,12 +12,28 @@ export interface PtEntry {
 export interface PtLog {
   eventId: string;
   goal: number | null;
-  /** 한 판에 얻는 실제 PT (직접 입력). 부스트 배율 계산은 실제 값을 확인한 뒤 추가 */
-  perPlay: number | null;
+  /** 기준 플레이: 실제로 받은 한 판의 PT와 그때 쓴 불 수. 다른 불 수의 한 판 PT를 배율로 환산한다 */
+  sample: { pt: number; boost: number } | null;
+  /** 지금 가진 불과 입력한 시각 (남은 기간에 쓸 수 있는 불 계산용) */
+  flames: { count: number; at: number } | null;
   entries: PtEntry[];
 }
 
-export const emptyLog = (eventId: string): PtLog => ({ eventId, goal: null, perPlay: null, entries: [] });
+/** 이벤트와 상관없이 유지하는 플레이 방식 */
+export interface PlayPrefs {
+  passport: boolean;
+  /** 한 판에 쓸 불 (0~10) */
+  boost: number;
+}
+
+export const DEFAULT_PLAY: PlayPrefs = { passport: true, boost: 10 };
+
+export const emptyLog = (eventId: string): PtLog => ({ eventId, goal: null, sample: null, flames: null, entries: [] });
+
+/** 예전 버전 기록(perPlay 등)을 지금 형식으로 */
+export function normalizeLog(log: Partial<PtLog> & { eventId: string }): PtLog {
+  return { ...emptyLog(log.eventId), goal: log.goal ?? null, sample: log.sample ?? null, flames: log.flames ?? null, entries: log.entries ?? [] };
+}
 
 /** 시각 순으로 정렬한 기록 (같은 시각이면 나중에 넣은 값) */
 export function sortedEntries(log: PtLog): PtEntry[] {
@@ -33,14 +50,22 @@ export interface Pace {
   ratePerHour: number | null;
   /** 지금 평균 속도를 유지했을 때 종료 시 예상 PT */
   projectedFinal: number | null;
-  /** 목표까지 필요한 플레이 횟수 (1회당 PT를 입력했을 때만) */
+  /** 정한 불 수로 한 판 PT (기준 플레이를 입력했을 때만) */
+  perPlay: number | null;
+  /** 목표까지 필요한 플레이 횟수 */
   playsNeeded: number | null;
+  /** 목표까지 필요한 불 */
+  flamesNeeded: number | null;
+  /** 종료까지 쓸 수 있는 불 = 가진 불 + 회복될 불 */
+  flamesAvailable: number;
+  /** 쓸 수 있는 불을 정한 불 수로 다 쓰면 도달하는 PT */
+  reachablePt: number | null;
 }
 
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
 
-export function pace(log: PtLog, event: { startsAt: string; endsAt: string }, now: number): Pace {
+export function pace(log: PtLog, event: { startsAt: string; endsAt: string }, now: number, play: PlayPrefs = DEFAULT_PLAY): Pace {
   const start = Date.parse(event.startsAt);
   const end = Date.parse(event.endsAt);
   const entries = sortedEntries(log);
@@ -55,8 +80,17 @@ export function pace(log: PtLog, event: { startsAt: string; endsAt: string }, no
     ratePerHour = (last.pt / (last.at - start)) * HOUR;
     projectedFinal = Math.round(last.pt + (ratePerHour / HOUR) * Math.max(0, end - last.at));
   }
-
   const dailyNeeded = remainingPt === null ? null : Math.ceil(remainingPt / Math.max(1, remainingMs / DAY));
-  const playsNeeded = remainingPt !== null && log.perPlay && log.perPlay > 0 ? Math.ceil(remainingPt / log.perPlay) : null;
-  return { current, remainingPt, remainingMs, dailyNeeded, ratePerHour, projectedFinal, playsNeeded };
+
+  const perPlay = log.sample && log.sample.pt > 0 ? playPt(basePt(log.sample.pt, log.sample.boost, play.passport), play.boost, play.passport) : null;
+  const playsNeeded = remainingPt !== null && perPlay ? Math.ceil(remainingPt / perPlay) : null;
+  const flamesNeeded = playsNeeded !== null ? playsNeeded * play.boost : null;
+
+  // 가진 불(입력한 시각 기준) + 그 시각부터 종료까지 회복될 불. 입력이 없으면 지금부터 회복될 불만
+  const interval = flameRecoveryMinutes(play.passport) * 60_000;
+  const from = Math.min(log.flames?.at ?? now, end);
+  const flamesAvailable = (log.flames?.count ?? 0) + Math.floor(Math.max(0, end - from) / interval);
+  const reachablePt = perPlay && play.boost > 0 ? current + Math.floor(flamesAvailable / play.boost) * perPlay : null;
+
+  return { current, remainingPt, remainingMs, dailyNeeded, ratePerHour, projectedFinal, perPlay, playsNeeded, flamesNeeded, flamesAvailable, reachablePt };
 }

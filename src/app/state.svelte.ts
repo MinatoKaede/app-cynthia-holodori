@@ -4,6 +4,7 @@ import { challengeSongIds, currentEvent, isActive } from '../engine/events';
 import type { Card, ChartMeta, GameEvent } from '../engine/types';
 import { effectiveGrowth, type GrowthOverrides, type StoredBackup } from './lib/backup';
 import { loadAppData, type AppData, type LoadProgress } from './lib/data';
+import { isScoreChallenge } from './lib/format';
 import { idbGet, idbPut } from './lib/idb';
 
 export type Tab = 'home' | 'recommend' | 'schedule' | 'data';
@@ -203,7 +204,8 @@ export function resetConditions(mode: SearchMode, at = app.now) {
   const event = activeEvent(at);
   const challenge = challengeSongIds(event);
   const leader = cards.find((c) => c.rarity === 5);
-  cond.mode = event ? mode : 'normal';
+  // 스코어 챌린지 이벤트에는 PT가 없어 과제곡 점수만
+  cond.mode = !event ? 'normal' : isScoreChallenge(event) ? 'event-score' : mode;
   cond.songId = challenge[0] ?? songs(at)[0]?.songId ?? '';
   cond.difficulty = 'expert';
   cond.leaderCharacterId = leader?.characterId ?? '';

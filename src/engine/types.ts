@@ -31,6 +31,8 @@ export interface GameEvent extends EventSchedule {
   awakeningBonusPercentByRarity: Record<Rarity, number[]>;
   challengeSongScoreBonusPercent: number;
   bonusAssumptionNotice?: string;
+  /** 갤산기 관리자의 출처 메모 (공지 주소, 확인 범위 등) */
+  source?: unknown;
   chapters?: EventSchedule[];
 }
 

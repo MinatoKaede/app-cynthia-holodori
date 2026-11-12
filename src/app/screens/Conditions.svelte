@@ -2,7 +2,7 @@
   import type { SearchMode } from '../../engine/context';
   import { challengeSongIds, eventCandidateCards } from '../../engine/events';
   import MemberIcon from '../components/MemberIcon.svelte';
-  import { DIFFICULTIES, DIFFICULTY_LABEL } from '../lib/format';
+  import { DIFFICULTIES, DIFFICULTY_LABEL, isScoreChallenge } from '../lib/format';
   import { concurrency, search, startSearch } from '../search.svelte';
   import { activeEvent, app, cardById, cardLabel, chartMeta, cond, getData, members, nav, setLeader, songs } from '../state.svelte';
 
@@ -22,7 +22,11 @@
   });
 
   const modes: { id: SearchMode; label: string }[] = $derived(
-    event ? [{ id: 'event-pt', label: '이벤트 PT' }, { id: 'event-score', label: '과제곡 점수' }] : [{ id: 'normal', label: '최고 점수' }],
+    !event
+      ? [{ id: 'normal', label: '최고 점수' }]
+      : isScoreChallenge(event)
+        ? [{ id: 'event-score', label: '과제곡 점수' }]
+        : [{ id: 'event-pt', label: '이벤트 PT' }, { id: 'event-score', label: '과제곡 점수' }],
   );
 
   function setMode(m: SearchMode) {
@@ -60,7 +64,7 @@
         {/each}
       </div>
       {#if cond.mode === 'event-pt'}
-        <p class="small muted">예상 PT(예상 점수 × 이벤트 보너스) 높은 순으로 찾습니다.</p>
+        <p class="small muted">PT 지수(예상 점수 × 이벤트 보너스) 높은 순으로 찾습니다. 같은 곡에서 PT를 많이 받는 덱의 순서이며, 실제 획득 PT 값은 아닙니다.</p>
       {:else if cond.mode === 'event-score'}
         <p class="small muted">과제곡 보너스를 반영해 최대 점수가 높은 순으로 찾습니다 (갤산기 스코어 탭과 같은 기준).</p>
       {:else}

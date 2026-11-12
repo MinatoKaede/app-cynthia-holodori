@@ -5,11 +5,12 @@
   import MemberIcon from '../components/MemberIcon.svelte';
   import { imageUrl } from '../lib/images';
   import { backupSummary } from '../lib/backup';
-  import { date, dateTime, eventKind, remaining } from '../lib/format';
+  import { date, dateTime, eventKind, isScoreChallenge, remaining } from '../lib/format';
   import { activeEvent, app, baseEvent, cardById, getData, members, nav, nextEvent, openRecommend, songs } from '../state.svelte';
 
   const event = $derived(activeEvent(app.now));
   const base = $derived(baseEvent(app.now));
+  const scoreChallenge = $derived(isScoreChallenge(base));
   const next = $derived(event ? null : nextEvent(app.now));
   const chapter = $derived(base?.chapters?.find((c) => event && event.id === c.id) ?? null);
   const memberName = $derived.by(() => {
@@ -37,7 +38,7 @@
         <span class="badge num">{remaining(base.endsAt, app.now)}</span>
       </div>
       <div class="row wrap">
-        {#if eventKind(base.id)}<span class="chip">{eventKind(base.id)}</span>{/if}
+        {#if eventKind(base)}<span class="chip">{eventKind(base)}</span>{/if}
         {#if chapter}<span class="chip on">{chapter.name}</span>{/if}
       </div>
       <h2>{base.name}</h2>
@@ -58,6 +59,9 @@
           <li>과제곡 점수 <b class="accent">+{event.challengeSongScoreBonusPercent}%</b> <span class="muted">· {challengeTitles.join(', ')}</span></li>
         {/if}
       </ul>
+      {#if scoreChallenge}
+        <p class="notice">스코어 챌린지 이벤트: 과제곡 하이스코어의 합계로 순위가 정해집니다. 멤버·대상 카드 보너스는 메달 획득에 적용됩니다.</p>
+      {/if}
       {#if event.bonusAssumptionNotice}<p class="notice warn">{event.bonusAssumptionNotice}</p>{/if}
 
       {#if event.featuredCardIds.length > 0}
@@ -69,10 +73,14 @@
         </div>
       {/if}
 
-      <div class="split">
-        <button class="btn primary" onclick={() => openRecommend('event-pt')}>이벤트 PT 덱</button>
-        <button class="btn soft" onclick={() => openRecommend('event-score')}>과제곡 점수 덱</button>
-      </div>
+      {#if scoreChallenge}
+        <button class="btn primary block" onclick={() => openRecommend('event-score')}>과제곡 점수 덱</button>
+      {:else}
+        <div class="split">
+          <button class="btn primary" onclick={() => openRecommend('event-pt')}>이벤트 PT 덱</button>
+          <button class="btn soft" onclick={() => openRecommend('event-score')}>과제곡 점수 덱</button>
+        </div>
+      {/if}
     </section>
   {:else}
     <section class="card">

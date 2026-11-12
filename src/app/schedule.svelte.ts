@@ -1,12 +1,14 @@
 // 스케줄 상태: 진행 중인 이벤트의 목표·PT 기록, 알림 설정. 기기에만 저장한다.
 import { idbGet, idbPut } from './lib/idb';
 import { DEFAULT_NOTIFY, planNotifications, reschedule, type NotifyPrefs } from './lib/notify';
-import { emptyLog, type PtLog } from './lib/pace';
+import { DEFAULT_PLAY, emptyLog, normalizeLog, type PlayPrefs, type PtLog } from './lib/pace';
 import { baseEvent } from './state.svelte';
 
 export const schedule = $state({
   log: null as PtLog | null,
   notify: { ...DEFAULT_NOTIFY } as NotifyPrefs,
+  /** 패스포트·한 판에 쓸 불 (이벤트가 바뀌어도 유지) */
+  play: { ...DEFAULT_PLAY } as PlayPrefs,
   /** 알림 예약 실패 메시지 (권한 거부 등) */
   notifyError: '',
 });
@@ -14,12 +16,17 @@ export const schedule = $state({
 /** 저장된 기록이 지금 이벤트 것이 아니면 버린다 (지난 이벤트 기록은 보관하지 않음) */
 function logFor(eventId: string | null, stored: PtLog | null | undefined): PtLog | null {
   if (!eventId) return null;
-  return stored && stored.eventId === eventId ? stored : emptyLog(eventId);
+  return stored && stored.eventId === eventId ? normalizeLog(stored) : emptyLog(eventId);
 }
 
 export async function loadSchedule(): Promise<void> {
-  const [log, notify] = await Promise.all([idbGet<PtLog>('kv', 'ptlog'), idbGet<NotifyPrefs>('kv', 'notify')]);
+  const [log, notify, play] = await Promise.all([
+    idbGet<PtLog>('kv', 'ptlog'),
+    idbGet<NotifyPrefs>('kv', 'notify'),
+    idbGet<PlayPrefs>('kv', 'play'),
+  ]);
   schedule.notify = { ...DEFAULT_NOTIFY, ...notify };
+  schedule.play = { ...DEFAULT_PLAY, ...play };
   const fresh = logFor(baseEvent(Date.now())?.id ?? null, log);
   schedule.log = fresh;
   if (fresh && fresh !== log) await idbPut('kv', 'ptlog', fresh);
@@ -42,7 +49,12 @@ async function saveLog(log: PtLog) {
   await syncNotifications();
 }
 
-export function updateLog(change: Partial<Pick<PtLog, 'goal' | 'perPlay'>>) {
+export async function savePlay(prefs: PlayPrefs) {
+  schedule.play = prefs;
+  await idbPut('kv', 'play', $state.snapshot(prefs));
+}
+
+export function updateLog(change: Partial<Pick<PtLog, 'goal' | 'sample' | 'flames'>>) {
   if (schedule.log) return saveLog({ ...$state.snapshot(schedule.log), ...change });
 }
 

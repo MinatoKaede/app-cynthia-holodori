@@ -37,7 +37,7 @@ describe('planNotifications', () => {
   });
 
   it('매일 체크: 정한 시각마다 종료 전까지, 목표가 있으면 남은 PT를 적는다', () => {
-    const log = { eventId: relay.id, goal: 1_000_000, perPlay: null, entries: [{ at: now, pt: 250_000 }] };
+    const log = { eventId: relay.id, goal: 1_000_000, sample: null, flames: null, entries: [{ at: now, pt: 250_000 }] };
     const plan = planNotifications(relay, { ...DEFAULT_NOTIFY, chapter: false, end3h: false, end1h: false, daily: true, dailyTime: '21:00' }, log, now);
     expect(plan.length).toBeGreaterThanOrEqual(7);
     for (const p of plan) {

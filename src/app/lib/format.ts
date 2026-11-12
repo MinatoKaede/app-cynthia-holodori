@@ -30,11 +30,17 @@ export const DIFFICULTIES = ['easy', 'normal', 'hard', 'expert'] as const;
 export const DIFFICULTY_LABEL: Record<string, string> = { easy: 'EASY', normal: 'NORMAL', hard: 'HARD', expert: 'EXPERT' };
 
 /**
- * 이벤트 ID 앞부분으로 게임 속 정식 명칭을 표시 (갤산기 임시 ID notice-…는 종류를 알 수 없음).
- * 스코어 챌린지 이벤트(특정 곡 하이스코어 합계)는 갤산기 ID 형식을 아직 모른다 — 나오면 추가
+ * 스코어 챌린지 이벤트 (PT가 아니라 지정곡 하이스코어 합계로 순위). 갤산기 ID는 포인트 랠리와 같은
+ * marathon_event-normal-*이고 구분 필드가 없어, 출처 메모(source)의 "Score challenge event" 문구로 판단한다.
  */
-export function eventKind(id: string): string | null {
-  if (id.startsWith('marathon_event-relay')) return '스포트라이트 이벤트';
-  if (id.startsWith('marathon_event-normal')) return '포인트 랠리 이벤트';
+export function isScoreChallenge(event: { source?: unknown } | null | undefined): boolean {
+  return !!event?.source && /score challenge event/i.test(JSON.stringify(event.source));
+}
+
+/** 게임 속 정식 명칭 (갤산기 임시 ID notice-…는 종류를 알 수 없음) */
+export function eventKind(event: { id: string; source?: unknown }): string | null {
+  if (isScoreChallenge(event)) return '스코어 챌린지 이벤트';
+  if (event.id.startsWith('marathon_event-relay')) return '스포트라이트 이벤트';
+  if (event.id.startsWith('marathon_event-normal')) return '포인트 랠리 이벤트';
   return null;
 }

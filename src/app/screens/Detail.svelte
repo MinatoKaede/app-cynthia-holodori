@@ -70,7 +70,7 @@
     {/if}
     <section class="card num">
       {#if r.eventBonusPercent !== undefined && run?.mode === 'event-pt'}
-        <div class="kv"><span class="muted">예상 PT <span class="small">(갤산기 기준)</span></span><b class="big">{num(eventPt(r.result.expectedScore, r.eventBonusPercent))}</b></div>
+        <div class="kv"><span class="muted">PT 지수 <span class="small">(실제 획득 PT 아님)</span></span><b class="big">{num(eventPt(r.result.expectedScore, r.eventBonusPercent))}</b></div>
       {/if}
       <div class="kv"><span class="muted">예상 점수</span><b>{num(r.result.expectedScore)}</b></div>
       <div class="kv"><span class="muted">최대 점수</span><b>{num(r.result.theoreticalMaxScore)}</b></div>

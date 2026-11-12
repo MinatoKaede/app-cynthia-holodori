@@ -82,7 +82,7 @@
     {/if}
 
     <div class="segment">
-      <button class:on={sort === 'default'} onclick={() => (sort = 'default')}>{ptMode ? '예상 PT순' : '최대 점수순'}</button>
+      <button class:on={sort === 'default'} onclick={() => (sort = 'default')}>{ptMode ? 'PT 지수순' : '최대 점수순'}</button>
       <button class:on={sort === 'expected'} onclick={() => (sort = 'expected')}>예상 점수순</button>
     </div>
 
@@ -92,7 +92,7 @@
           <span class="rank num">{rank + 1}</span>
           <div class="grow stats num">
             {#if ptMode}
-              <div><span class="muted small">예상 PT</span> <b class="big">{num(pt(r))}</b></div>
+              <div><span class="muted small">PT 지수</span> <b class="big">{num(pt(r))}</b></div>
               <div class="small">예상 {num(r.result.expectedScore)} · 최대 {num(r.result.theoreticalMaxScore)} · 보너스 <b class="accent">+{r.eventBonusPercent}%</b></div>
             {:else}
               <div><span class="muted small">최대 점수</span> <b class="big">{num(r.result.theoreticalMaxScore)}</b></div>
@@ -113,7 +113,10 @@
     <p class="small muted num">
       {search.cachedAt ? '당시 ' : ''}계산 {duration(search.elapsedMs)} · 워커 {search.workers}개 · 후보 {num(search.screenedCount)}개 중 {num(search.exactCount)}개 정밀 평가
     </p>
-    <p class="small muted">예상 PT는 갤산기 기준 지표입니다. 점수는 공식 기반 추정치이며 실제 결과와 다를 수 있습니다.</p>
+    {#if ptMode}
+      <p class="small muted">PT 지수 = 예상 점수 × (1 + 이벤트 보너스). 같은 곡에서 덱끼리 비교하는 갤산기 지표이며, 실제 획득 PT는 기본점·라이브 부스트·패스포트가 더해져 다릅니다.</p>
+    {/if}
+    <p class="small muted">점수는 공식 기반 추정치이며 실제 결과와 다를 수 있습니다.</p>
   {:else}
     <p class="notice">아직 찾은 결과가 없습니다.</p>
   {/if}
